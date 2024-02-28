@@ -1,3 +1,0 @@
-name: TinyHooks
-version: '${project.version}'
-main: com.mcteams.protocol.TinyHooks
