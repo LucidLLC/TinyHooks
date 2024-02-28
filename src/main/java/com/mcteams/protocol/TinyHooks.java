@@ -2,7 +2,11 @@ package com.mcteams.protocol;
 
 import com.comphenix.tinyprotocol.TinyProtocol;
 import io.netty.channel.Channel;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.HashSet;
@@ -10,14 +14,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
-public final class TinyHooks extends TinyProtocol {
+public final class TinyHooks extends TinyProtocol implements Listener {
 
 
-    enum Result {
+    public enum Result {
         PASS, CANCEL
     }
 
-    enum Side {
+    public enum Side {
         // Packet<Stage>In
         IN,
 
@@ -25,7 +29,7 @@ public final class TinyHooks extends TinyProtocol {
         OUT
     }
 
-    enum Priority {
+    public enum Priority {
         LOWEST,
         LOW,
         DEFAULT,
@@ -33,11 +37,22 @@ public final class TinyHooks extends TinyProtocol {
         HIGHEST
     }
 
-    public final Map<Side, Map<Priority, Map<Class<?>, Set<BiFunction<Object, Player, Result>>>>> hooks = new ConcurrentHashMap<>();
+    private final Map<Side, Map<Priority, Map<Class<?>, Set<BiFunction<Object, Player, Result>>>>> hooks = new ConcurrentHashMap<>();
 
     public TinyHooks(Plugin plugin) {
         super(plugin);
+
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
+
+    /**
+     * This handles injecting of the player
+     */
+    @EventHandler
+    public void onPlayerJoin(final PlayerJoinEvent event) {
+        this.injectPlayer(event.getPlayer());
+    }
+
 
     public <T> void addPacketHook(Side side, Priority priority, Class<? extends T> packet, BiFunction<T, Player, Result> on) {
         hooks.computeIfAbsent(side, (s) -> new ConcurrentHashMap<>())
